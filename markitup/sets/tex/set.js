@@ -23,12 +23,12 @@ editorSettings = {
 				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith;},
 				closeBlockWith:function(markItUp){return markIt.latexBlock(markItUp).closeBlockWith;},
 			},
-			{name:'Bulleted list', key:'U', openWith:'\\item ', className:'bulleted-list, fas fa-list-ul',placeHolder:'List item',
+			{name:'Bulleted list', key:'U', openWith:'  \\item ', className:'bulleted-list, fas fa-list-ul',placeHolder:'List item',
 				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{itemize}\n';},
 				closeBlockWith:function(markItUp){return '\n\\end{itemize}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 				multiline:true,
 			},
-			{name:'Numeric list',key:'O', className:'numeric-list fas fa-list-ol',placeHolder:'List item', openWith:'\\item ',
+			{name:'Numeric list',key:'O', className:'numeric-list fas fa-list-ol',placeHolder:'List item', openWith:'  \\item ',
 				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{enumerate}\n';},
 				closeBlockWith:function(markItUp){return '\n\\end{enumerate}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 				multiline:true,
@@ -46,12 +46,10 @@ editorSettings = {
 			},*/
         ]},
         {name:'Math', className:'', dropMenu:[
-			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex codes'},
-            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex codes'},
+			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex code'},
+            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex code'},
 			{name:'Numbered equation', key:"3", 
 			replaceWith:function(markItUp){markIt.latexNumberedEquation(markItUp);return false;},
-			openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{equation}';},
-			closeBlockWith:function(markItUp){return '\n\\end{equation}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 			},
 			{name:'Aligned equations', key:"4", 
 			openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{align*}\n';},
@@ -189,7 +187,7 @@ markIt = {
 		var imagePrompt = $('<div/>', {
 				title:'Image',
 				html:
-				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
+				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
 			});
 		imagePrompt.dialog({
 			modal:true,
@@ -204,7 +202,7 @@ markIt = {
 						html: "Continue",
 						class:"btn btn-primary",
 						click: function () {
-								var data={imageURL:$("input[name='image-url']").val(),imageWidth:$("input[name='image-width']").val()};
+								var data={imageURL:$("input[name='image-url']").val(),imageWidth:$("input[name='image-width']").val(),imageHeight:$("input[name='image-height']").val()};
 							
 								imagePrompt.remove();
 								that.latexImageCallback(markItUp, data);	
@@ -354,49 +352,58 @@ markIt = {
 	},
 
 	latexImageCallback: function (markItUp,data) {
-		if (data.imageWidth && data.imageHeight){
-			$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+', height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
+		var openBlockWith='';
+		var closeBlockWith='';
+		if(markItUp.selection!=""){
+			openBlockWith=markIt.latexBlock(markItUp).openBlockWith + '\\begin{figure}[h]\n';
+			closeBlockWith='\n\\end{figure}'+ markIt.latexBlock(markItUp).closeBlockWith;
+			if (data.imageWidth && data.imageHeight){
+				$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[width='+data.imageWidth+', height='+data.imageHeight+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+			}else{
+				if(data.imageHeight){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[height='+data.imageHeight+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+				if(data.imageWidth){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[width='+data.imageWidth+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+				if(!data.imageHeight && !data.imageWidth){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+			}
+
 		}else{
-			if(data.imageHeight){
-				$.markItUp({openWith:'\\includegraphics[height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
-			}
-			if(data.imageWidth){
-				$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+']{'+data.imageURL+'}', closeWith:'',});
-			}
-			if(!data.imageHeight && !data.imageWidth){
-				$.markItUp({openWith:'\\includegraphics{'+data.imageURL+'}', closeWith:'',});
+
+			if (data.imageWidth && data.imageHeight){
+				$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+', height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
+			}else{
+				if(data.imageHeight){
+					$.markItUp({openWith:'\\includegraphics[height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
+				}
+				if(data.imageWidth){
+					$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+']{'+data.imageURL+'}', closeWith:'',});
+				}
+				if(!data.imageHeight && !data.imageWidth){
+					$.markItUp({openWith:'\\includegraphics{'+data.imageURL+'}', closeWith:'',});
+				}
 			}
 		}
 		return false;
 	},
 
 	latexNumberedEquationCallback: function (markItUp,data) {
+		var openBlock=markIt.latexBlock(markItUp).openBlockWith + '\\begin{equation}';
+		var closeBlock='\n\\end{equation}'+ markIt.latexBlock(markItUp).closeBlockWith;
 		if(data.label){
-			$.markItUp({openWith:'\\label{'+ data.label +'}\n', closeWith:'', placeHolder:'latex code for your equation',});
+			$.markItUp({		
+				openBlockWith:openBlock,closeBlockWith:closeBlock,
+				openWith:'\\label{'+ data.label +'}\n',placeHolder:'latex code for your equation',
+			});
 		}else{
-			$.markItUp({openWith:'\n', closeWith:'', placeHolder:'latex code for your equation',});
+			$.markItUp({openBlockWith:openBlock,closeBlockWith:closeBlock,openWith:'\n',placeHolder:'latex code for your equation',});
 		}		
 		return false;
 	},
-	latexAlignedEquationCallback: function (markItUp) {
-		
-		var lines=markItUp.selection.split(/\n/);
 
-		if (lines.length>0 || lines[0].trim()!=''){
-			for (var i = 0; i < lines.length; i++) {			
-
-				if(i==lines.length-1){
-					lines[i]='& ' + lines[i]
-				}else{
-					lines[i]='& ' + lines[i] + '\\\\'
-				}
-			}
-			var selection=lines.join('\n');
-			$.markItUp({replaceWith:markIt.latexBlock(markItUp).openBlockWith+'\\begin{align*}\n'+ selection+'\n\\end{align*}'+ markIt.latexBlock(markItUp).closeBlockWith,placeHolder:'',});
-	
-			return false;
-		}
-	},
 	latexTheoremCallback: function(markItUp,data){
 		var attr=".theorem-like";
 		if(data.identifier){attr=attr+" #"+data.identifier}

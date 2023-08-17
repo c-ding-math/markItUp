@@ -48,12 +48,10 @@ editorSettings = {
 			},*/
         ]},
         {name:'Math', className:'', dropMenu:[
-			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex codes'},
-            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex codes'},
+			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex code'},
+            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex code'},
 			{name:'Numbered equation', key:"3", 
 			replaceWith:function(markItUp){markIt.latexNumberedEquation(markItUp);return false;},
-			openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{equation}';},
-			closeBlockWith:function(markItUp){return '\n\\end{equation}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 			},
 			{name:'Aligned equations', key:"4", 
 			openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{align*}\n';},
@@ -238,7 +236,7 @@ markIt = {
 		var imagePrompt = $('<div/>', {
 				title:'Image',
 				html:
-				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
+				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
 			});
 		imagePrompt.dialog({
 			modal:true,
@@ -362,7 +360,7 @@ markIt = {
 		});
 	},
 
-	markdownNumberedEquation: function(markItUp) {
+	latexNumberedEquation: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Numbered equation',
@@ -378,7 +376,7 @@ markIt = {
 					click: function () {
 						var data ={label: $("input[name='equation-label']").val()};
 						$(this).remove();
-						that.markdownNumberedEquationCallback(markItUp,data);
+						that.latexNumberedEquationCallback(markItUp,data);
 					},
 				},
 				{
@@ -391,6 +389,7 @@ markIt = {
 			]
 		});
 	},
+	
 	
 	markdownLinkCallback: function (markItUp,data) {
 		$.markItUp({openWith:'[', closeWith:']('+data.url+')', placeHolder:'Your text to link here...',});
@@ -414,11 +413,16 @@ markIt = {
 		return false;
 	},
 
-	markdownNumberedEquationCallback: function (markItUp,data) {
+	latexNumberedEquationCallback: function (markItUp,data) {
+		var openBlock=markIt.latexBlock(markItUp).openBlockWith + '\\begin{equation}';
+		var closeBlock='\n\\end{equation}'+ markIt.latexBlock(markItUp).closeBlockWith;
 		if(data.label){
-			$.markItUp({openWith:'\\begin{equation}\\label{'+ data.label +'}\n', closeWith:'\n\\end{equation}', placeHolder:'latex code for your equation',});
+			$.markItUp({		
+				openBlockWith:openBlock,closeBlockWith:closeBlock,
+				openWith:'\\label{'+ data.label +'}\n',placeHolder:'latex code for your equation',
+			});
 		}else{
-			$.markItUp({openWith:'\\begin{equation}\n', closeWith:'\n\\end{equation}', placeHolder:'latex code for your equation',});
+			$.markItUp({openBlockWith:openBlock,closeBlockWith:closeBlock,openWith:'\n',placeHolder:'latex code for your equation',});
 		}		
 		return false;
 	},
